@@ -2,11 +2,16 @@ package hasura
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/hashicorp-demoapp/hashicups-client-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+type ProviderData struct {
+	HasuraQeuryEndpoint string
+	AdminSecret         string
+}
 
 // Provider -
 func Provider() *schema.Provider {
@@ -15,70 +20,35 @@ func Provider() *schema.Provider {
 			"host": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_HOST", nil),
+				DefaultFunc: schema.EnvDefaultFunc("HASURA_HOST", nil),
 			},
-			"username": &schema.Schema{
+			"admin_secret": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_USERNAME", nil),
-			},
-			"password": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("HASHICUPS_PASSWORD", nil),
+				DefaultFunc: schema.EnvDefaultFunc("HASURA_GRAPHQL_ADMIN_SECRET", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"hashicups_order": resourceOrder(),
+			"hasura_remote_schema": resourceRemoteSchema(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"hashicups_coffees": dataSourceCoffees(),
-			"hashicups_order":   dataSourceOrder(),
-		},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
-
-	var host *string
-
-	hVal, ok := d.GetOk("host")
-	if ok {
-		tempHost := hVal.(string)
-		host = &tempHost
-	}
+	host := d.Get("host").(string)
+	adminSecret := d.Get("admin_secret").(string)
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
-	if (username != "") && (password != "") {
-		c, err := hashicups.NewClient(host, &username, &password)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create HashiCups client",
-				Detail:   "Unable to authenticate user for authenticated HashiCups client",
-			})
+	endpoint := fmt.Sprintf("https://%s/v1/query", host)
 
-			return nil, diags
-		}
-
-		return c, diags
+	data := ProviderData{
+		HasuraQeuryEndpoint: endpoint,
+		AdminSecret:         adminSecret,
 	}
 
-	c, err := hashicups.NewClient(host, nil, nil)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create HashiCups client",
-			Detail:   "Unable to create anonymous HashiCups client",
-		})
-		return nil, diags
-	}
-
-	return c, diags
+	return &data, diags
 }

@@ -1,16 +1,11 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/AlexeyRaga/terraform-provider-hasura/hasura/hasura"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-
-	"github.com/AlexeyRaga/terraform-provider-hasura/hasura"
 )
 
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() *schema.Provider {
-			return hasura.Provider()
-		},
-	})
+		ProviderFunc: hasura.Provider})
 }
