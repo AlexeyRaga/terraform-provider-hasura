@@ -203,13 +203,13 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 		Timeout        int    `json:"timeout_seconds"`
 	}
 
-	type ResponseItem struct {
+	type ResponseSchema struct {
 		Name       string     `json:"name"`
 		Definition Definition `json:"definition"`
 	}
 
 	type Response struct {
-		RemoteSchemas []ResponseItem `json:"remote_schemas"`
+		RemoteSchemas []ResponseSchema `json:"remote_schemas"`
 	}
 
 	bytes, err := ioutil.ReadAll(res.Body)
@@ -243,7 +243,14 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 		return
 	}
 
-	if len(response.RemoteSchemas) == 0 {
+	var rs ResponseSchema
+	for _, v := range response.RemoteSchemas {
+		if v.Name == name {
+			rs = v
+		}
+	}
+
+	if rs.Name != name {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Remote schema '%s' does not exist", name),
@@ -252,7 +259,6 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 		return
 	}
 
-	rs := response.RemoteSchemas[0]
 	state.Url = types.String{Value: rs.Definition.Url}
 	state.ForwardHeaders = types.Bool{Value: rs.Definition.ForwardHeaders}
 	// state.AdditionalHeaders = rs.Definition.AdditionalHeaders

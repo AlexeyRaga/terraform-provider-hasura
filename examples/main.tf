@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     hasura = {
-      version = "0.0.1"
+      version = "0.0.3"
       source  = "AlexeyRaga/hasura"
     }
   }
@@ -15,6 +15,16 @@ provider "hasura" {
 resource "hasura_remote_schema" "spacex" {
   name = "SpaceX"
   url = "https://api.spacex.land/graphql/"
+  forward_headers = true
+  additional_headers = {
+    "X-FOO" = "FOO"
+    "X-BAR" = "BAR"
+  }
+}
+
+resource "hasura_remote_schema" "rm" {
+  name = "GitHub"
+  url = "https://countries.trevorblades.com/"
   forward_headers = true
   additional_headers = {
     "X-FOO" = "FOO"
