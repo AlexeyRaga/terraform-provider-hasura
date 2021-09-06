@@ -247,6 +247,7 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 	for _, v := range response.RemoteSchemas {
 		if v.Name == name {
 			rs = v
+			break
 		}
 	}
 
