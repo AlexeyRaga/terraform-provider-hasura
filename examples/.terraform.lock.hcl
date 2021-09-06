@@ -5,6 +5,6 @@ provider "registry.terraform.io/alexeyraga/hasura" {
   version     = "0.0.1"
   constraints = "0.0.1"
   hashes = [
-    "h1:SMGPE10fuT4xCNFtRGYRvfMunMtgKyVOR19jJS7ThjQ=",
+    "h1:2x43ObMfZlSYPiVhxy1HtB1xIlWED5IyYB6zAGfx2e8=",
   ]
 }

@@ -1,57 +1,31 @@
 ---
-page_title: "order Resource - terraform-provider-hashicups"
+page_title: "remote-schema Resource - terraform-provider-hasura"
 subcategory: ""
 description: |-
-  The order resource allows you to configure a HashiCups order.
+  The remote schema resource allows you to specify a remote schema to be added to the Hasura GraphQL Engine.
 ---
 
-# Resource `hashicups_order`
+# Resource `hasura_remote_schema`
 
--> Visit the [Perform CRUD operations with Providers](https://learn.hashicorp.com/tutorials/terraform/provider-use?in=terraform/providers&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) Learn tutorial for an interactive getting started experience.
-
-The order resource allows you to configure a HashiCups order.
+ The remote schema resource allows you to specify a remote schema to be added to the Hasura GraphQL Engine.
 
 ## Example Usage
 
 ```terraform
-resource "hashicups_order" "edu" {
-  items {
-    coffee {
-      id = 3
-    }
-    quantity = 2
-  }
-  items {
-    coffee {
-      id = 2
-    }
-    quantity = 2
+resource "hasura_remote_schema" "spacex" {
+  name = "SpaceX"
+  url = "https://api.spacex.land/graphql/"
+  forward_headers = true
+  additional_headers = {
+    "X-FOO" = "FOO"
+    "X-BAR" = "BAR"
   }
 }
 ```
 
 ## Argument Reference
 
-- `items` - (Required) Items in a HashiCups order. See [Order item](#order-item) below for details.
-
-### Order item
-
-Each order item contains a `coffee` object and a `quantity`.
-
-- `coffee` - (Required) Represents a HashiCups coffee object. See [Coffee](#coffee) below for details.
-- `quantity` - (Required) The number of coffee in an order item.
-
-### Coffee
-
-- `id` - (Required) The HashiCups coffee ID.
-
-## Attributes Reference
-
-In addition to all the arguments above, the following attributes are exported.
-
-### Coffee
-
-- `image` - The coffee's image URL path.
-- `name` - The coffee name.
-- `price` - The coffee price.
-- `teaser` - The coffee teaser.
+- `name` - (Required) The name of the remote schema.
+- `url` - (Required) The URL of the remote schema.
+- `forward_headers` - (Optional) Whether to forward headers from the remote schema to the GraphQL server. Defaults to `false`.
+- `additional_headers` - (Optional) Additional headers to be sent to the GraphQL server.`
