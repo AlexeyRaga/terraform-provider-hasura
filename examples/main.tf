@@ -23,11 +23,10 @@ resource "hasura_remote_schema" "spacex" {
 }
 
 resource "hasura_remote_schema" "rm" {
-  name = "GitHub"
+  name = "TrevorBlade"
   url = "https://countries.trevorblades.com/"
-  forward_headers = true
+  forward_headers = false
   additional_headers = {
-    "X-FOO" = "FOO"
-    "X-BAR" = "BAR"
+    "X-FOO" = "NEW-FOO"
   }
 }
