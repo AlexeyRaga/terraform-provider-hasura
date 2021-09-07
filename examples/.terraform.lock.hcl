@@ -2,9 +2,9 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/alexeyraga/hasura" {
-  version     = "0.0.3"
-  constraints = "0.0.3"
+  version     = "0.0.4"
+  constraints = "0.0.4"
   hashes = [
-    "h1:swvcLm8sEgiVPsn6XS1H5Uzpve19zOOMcDj8tTsWISM=",
+    "h1:HQsUZkwR7QMBxpi1YVptpKpbzCYxIfMGauUtCpastNQ=",
   ]
 }

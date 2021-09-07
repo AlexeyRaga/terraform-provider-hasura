@@ -153,8 +153,7 @@ func (r ResourceRemoteSchema) Create(ctx context.Context, req tfsdk.CreateResour
 		Args: args,
 	}
 
-	res, err := executeExpect200(ctx, *r.p.data, body)
-	defer res.Body.Close()
+	_, err = executeRequest(ctx, *r.p.data, body)
 
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -204,10 +203,7 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 	}`
 	postBody := []byte(query)
 
-	res, err := execute(ctx, *r.p.data, postBody)
-	if res != nil {
-		defer res.Body.Close()
-	}
+	bytes, err := execute(ctx, *r.p.data, postBody)
 
 	type RemoteDefinition struct {
 		Url            string `json:"url"`
@@ -224,21 +220,11 @@ func (r ResourceRemoteSchema) Read(ctx context.Context, req tfsdk.ReadResourceRe
 		RemoteSchemas []ResponseSchema `json:"remote_schemas"`
 	}
 
-	bytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
 			Summary:  fmt.Sprintf("Error reading remote schema '%s'", name),
 			Detail:   "An unexpected error was encountered while reading the Hasura HTTP response body: " + err.Error(),
-		})
-		return
-	}
-
-	if res.StatusCode != 200 {
-		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
-			Severity: tfprotov6.DiagnosticSeverityError,
-			Summary:  fmt.Sprintf("Error reading remote schema '%s'", name),
-			Detail:   fmt.Sprintf("HTTP request error. Response code: %d; %s", res.StatusCode, string(bytes)),
 		})
 		return
 	}
@@ -329,10 +315,7 @@ func (r ResourceRemoteSchema) Update(ctx context.Context, req tfsdk.UpdateResour
 		Args: args,
 	}
 
-	updateRes, err := executeExpect200(ctx, *r.p.data, updateRequest)
-	if updateRes != nil {
-		defer updateRes.Body.Close()
-	}
+	_, err = executeRequest(ctx, *r.p.data, updateRequest)
 
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -350,10 +333,7 @@ func (r ResourceRemoteSchema) Update(ctx context.Context, req tfsdk.UpdateResour
 		},
 	}
 
-	reloadRes, err := executeExpect200(ctx, *r.p.data, reloadRequest)
-	if reloadRes != nil {
-		defer reloadRes.Body.Close()
-	}
+	_, err = executeRequest(ctx, *r.p.data, reloadRequest)
 
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
@@ -406,10 +386,8 @@ func (r ResourceRemoteSchema) Delete(ctx context.Context, req tfsdk.DeleteResour
 		},
 	}
 
-	res, err := executeExpect200(ctx, *r.p.data, request)
-	if res != nil {
-		defer res.Body.Close()
-	}
+	_, err = executeRequest(ctx, *r.p.data, request)
+
 	if err != nil {
 		resp.Diagnostics = append(resp.Diagnostics, &tfprotov6.Diagnostic{
 			Severity: tfprotov6.DiagnosticSeverityError,
@@ -422,7 +400,7 @@ func (r ResourceRemoteSchema) Delete(ctx context.Context, req tfsdk.DeleteResour
 	resp.State.RemoveResource(ctx)
 }
 
-func execute(ctx context.Context, data ProviderData, body []byte) (*http.Response, error) {
+func execute(ctx context.Context, data ProviderData, body []byte) ([]byte, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", data.QueryUri, bytes.NewBuffer(body))
@@ -438,20 +416,27 @@ func execute(ctx context.Context, data ProviderData, body []byte) (*http.Respons
 	log.Printf("[WARN] %s", line)
 
 	resp, err := client.Do(req)
-
-	return resp, err
-}
-
-func executeExpect200(ctx context.Context, data ProviderData, body interface{}) (*http.Response, error) {
-	requestBody, _ := json.Marshal(body)
-	resp, err := execute(ctx, data, requestBody)
 	if err != nil {
 		return nil, err
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
 		bytes, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("HTTP request error. Response code: %d; %s", resp.StatusCode, string(bytes))
+	}
+
+	bytes, err := ioutil.ReadAll(resp.Body)
+
+	return bytes, err
+}
+
+func executeRequest(ctx context.Context, data ProviderData, body interface{}) ([]byte, error) {
+	requestBody, _ := json.Marshal(body)
+	resp, err := execute(ctx, data, requestBody)
+	if err != nil {
+		return nil, err
 	}
 
 	return resp, nil

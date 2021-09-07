@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     hasura = {
-      version = "0.0.3"
+      version = "0.0.5"
       source  = "AlexeyRaga/hasura"
     }
   }
